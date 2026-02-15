@@ -3,7 +3,14 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 
-const UPPER_CATEGORIES = ["ones", "twos", "threes", "fours", "fives", "sixes"] as const;
+const UPPER_CATEGORIES = [
+  "ones",
+  "twos",
+  "threes",
+  "fours",
+  "fives",
+  "sixes",
+] as const;
 const CATEGORIES = [
   ...UPPER_CATEGORIES,
   "chance",
@@ -15,7 +22,8 @@ const CATEGORIES = [
   "largeStraight",
 ] as const;
 const LOWER_CATEGORIES = CATEGORIES.filter(
-  (category): category is Exclude<Category, UpperCategory> => !UPPER_CATEGORIES.includes(category as UpperCategory)
+  (category): category is Exclude<Category, UpperCategory> =>
+    !UPPER_CATEGORIES.includes(category as UpperCategory),
 );
 type Category = (typeof CATEGORIES)[number];
 type UpperCategory = (typeof UPPER_CATEGORIES)[number];
@@ -41,8 +49,8 @@ const CATEGORY_LABELS: Record<Category, string> = {
   threeKind: "スリーカード",
   fourKind: "フォーカード",
   fullHouse: "フルハウス",
-  smallStraight: "ストレート（4連番）",
-  largeStraight: "フルストレート（5連番）",
+  smallStraight: "ショートストレート",
+  largeStraight: "フルストレート",
 };
 
 const DICE_COUNT = 5;
@@ -116,7 +124,8 @@ function calculateCategoryScore(category: Category, dice: number[]) {
   if (category === "largeStraight") {
     const isLargeStraight =
       uniqueValues.length === 5 &&
-      (hasSequence(uniqueValues, [1, 2, 3, 4, 5]) || hasSequence(uniqueValues, [2, 3, 4, 5, 6]));
+      (hasSequence(uniqueValues, [1, 2, 3, 4, 5]) ||
+        hasSequence(uniqueValues, [2, 3, 4, 5, 6]));
     return isLargeStraight ? 40 : 0;
   }
 
@@ -129,7 +138,9 @@ export default function GamePage() {
   const [rollsLeft, setRollsLeft] = useState<number>(MAX_ROLLS - 1);
   const [scores, setScores] = useState<Partial<Record<Category, number>>>({});
 
-  const gameOver = CATEGORIES.every((category) => scores[category] !== undefined);
+  const gameOver = CATEGORIES.every(
+    (category) => scores[category] !== undefined,
+  );
   const candidateScores = useMemo(() => {
     const next: Record<Category, number> = {
       ones: 0,
@@ -155,25 +166,32 @@ export default function GamePage() {
   }, [dice]);
 
   const upperSubtotal = useMemo(
-    () => UPPER_CATEGORIES.reduce((sum, category) => sum + (scores[category] ?? 0), 0),
-    [scores]
+    () =>
+      UPPER_CATEGORIES.reduce(
+        (sum, category) => sum + (scores[category] ?? 0),
+        0,
+      ),
+    [scores],
   );
   const upperBonus = upperSubtotal >= 63 ? 35 : 0;
   const upperRemain = Math.max(0, 63 - upperSubtotal);
   const baseTotal = useMemo(
-    () => CATEGORIES.reduce((sum, category) => sum + (scores[category] ?? 0), 0),
-    [scores]
+    () =>
+      CATEGORIES.reduce((sum, category) => sum + (scores[category] ?? 0), 0),
+    [scores],
   );
   const totalScore = useMemo(
     () => baseTotal + upperBonus,
-    [baseTotal, upperBonus]
+    [baseTotal, upperBonus],
   );
 
   const rollDice = () => {
     if (gameOver || rollsLeft <= 0) {
       return;
     }
-    setDice((prev) => prev.map((value, index) => (held[index] ? value : rollDie())));
+    setDice((prev) =>
+      prev.map((value, index) => (held[index] ? value : rollDie())),
+    );
     setRollsLeft((prev) => prev - 1);
   };
 
@@ -181,7 +199,9 @@ export default function GamePage() {
     if (gameOver) {
       return;
     }
-    setHeld((prev) => prev.map((isHeld, i) => (i === index ? !isHeld : isHeld)));
+    setHeld((prev) =>
+      prev.map((isHeld, i) => (i === index ? !isHeld : isHeld)),
+    );
   };
 
   const commitCategory = (category: Category) => {
@@ -207,15 +227,21 @@ export default function GamePage() {
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-3xl flex-col gap-6 p-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-amber-100">Yacht-like Dice MVP</h1>
-        <Link href="/" className="text-sm text-amber-200 underline hover:text-amber-100">
+        <h1 className="text-2xl font-bold text-amber-100">
+          Yacht-like Dice MVP
+        </h1>
+        <Link
+          href="/"
+          className="text-sm text-amber-200 underline hover:text-amber-100"
+        >
           Back
         </Link>
       </div>
 
       <section className="rounded-lg border border-amber-100/25 bg-amber-950/40 p-4">
         <p className="mb-3 text-sm text-amber-100/85">
-          ロール残り: <span className="font-semibold text-amber-50">{rollsLeft}</span>
+          ロール残り:{" "}
+          <span className="font-semibold text-amber-50">{rollsLeft}</span>
         </p>
         <div className="mb-4 flex flex-wrap gap-2">
           {dice.map((value, index) => (
@@ -244,7 +270,7 @@ export default function GamePage() {
       </section>
 
       <section className="rounded-lg border border-amber-100/25 bg-amber-950/40 p-4">
-        <h2 className="mb-3 text-lg font-semibold text-amber-100">上段</h2>
+        <h2 className="mb-3 text-lg font-semibold text-amber-100">数値</h2>
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
           {UPPER_CATEGORIES.map((category) => {
             const score = scores[category];
@@ -259,15 +285,19 @@ export default function GamePage() {
                   used
                     ? "cursor-not-allowed border-emerald-300/45 bg-emerald-950/55 text-emerald-100"
                     : "border-amber-100/25 bg-amber-950/30 text-amber-100 enabled:hover:bg-amber-900/40"
-                } ${
-                  gameOver && !used ? "cursor-not-allowed opacity-70" : ""
-                }`}
+                } ${gameOver && !used ? "cursor-not-allowed opacity-70" : ""}`}
               >
-                <div className={`font-medium ${used ? "text-emerald-100" : "text-amber-100"}`}>
+                <div
+                  className={`font-medium ${used ? "text-emerald-100" : "text-amber-100"}`}
+                >
                   {CATEGORY_LABELS[category]}
                 </div>
-                <div className={`text-sm ${used ? "text-emerald-200/90" : "text-amber-100/75"}`}>
-                  {used ? `確定: ${score}` : `候補: ${candidateScores[category]}`}
+                <div
+                  className={`text-sm ${used ? "text-emerald-200/90" : "text-amber-100/75"}`}
+                >
+                  {used
+                    ? `確定: ${score}`
+                    : `候補: ${candidateScores[category]}`}
                 </div>
               </button>
             );
@@ -276,8 +306,10 @@ export default function GamePage() {
       </section>
 
       <section className="rounded-lg border border-amber-100/25 bg-amber-950/40 p-4">
-        <h2 className="mb-2 text-lg font-semibold text-amber-100">上段ボーナス進捗</h2>
-        <p className="text-sm text-amber-100/80">上段合計: {upperSubtotal}</p>
+        <h2 className="mb-2 text-lg font-semibold text-amber-100">
+          数値ボーナス進捗
+        </h2>
+        <p className="text-sm text-amber-100/80">数値合計: {upperSubtotal}</p>
         <p className="text-sm text-amber-100/80">ボーナス条件: 63以上で +35</p>
         {upperBonus > 0 ? (
           <p className="mt-1 font-semibold text-emerald-200">達成 +35</p>
@@ -290,36 +322,42 @@ export default function GamePage() {
         <h2 className="mb-3 text-lg font-semibold text-amber-100">役</h2>
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
           {LOWER_CATEGORIES.map((category) => {
-              const score = scores[category];
-              const used = score !== undefined;
-              return (
-                <button
-                  key={category}
-                  type="button"
-                  onClick={() => commitCategory(category)}
-                  disabled={used || gameOver}
-                  className={`rounded-md border p-3 text-left transition ${
-                    used
-                      ? "cursor-not-allowed border-emerald-300/45 bg-emerald-950/55 text-emerald-100"
-                      : "border-amber-100/25 bg-amber-950/30 text-amber-100 enabled:hover:bg-amber-900/40"
-                  } ${
-                    gameOver && !used ? "cursor-not-allowed opacity-70" : ""
-                  }`}
+            const score = scores[category];
+            const used = score !== undefined;
+            return (
+              <button
+                key={category}
+                type="button"
+                onClick={() => commitCategory(category)}
+                disabled={used || gameOver}
+                className={`rounded-md border p-3 text-left transition ${
+                  used
+                    ? "cursor-not-allowed border-emerald-300/45 bg-emerald-950/55 text-emerald-100"
+                    : "border-amber-100/25 bg-amber-950/30 text-amber-100 enabled:hover:bg-amber-900/40"
+                } ${gameOver && !used ? "cursor-not-allowed opacity-70" : ""}`}
+              >
+                <div
+                  className={`font-medium ${used ? "text-emerald-100" : "text-amber-100"}`}
                 >
-                  <div className={`font-medium ${used ? "text-emerald-100" : "text-amber-100"}`}>
-                    {CATEGORY_LABELS[category]}
-                  </div>
-                  <div className={`text-sm ${used ? "text-emerald-200/90" : "text-amber-100/75"}`}>
-                    {used ? `確定: ${score}` : `候補: ${candidateScores[category]}`}
-                  </div>
-                </button>
-              );
-            })}
+                  {CATEGORY_LABELS[category]}
+                </div>
+                <div
+                  className={`text-sm ${used ? "text-emerald-200/90" : "text-amber-100/75"}`}
+                >
+                  {used
+                    ? `確定: ${score}`
+                    : `候補: ${candidateScores[category]}`}
+                </div>
+              </button>
+            );
+          })}
         </div>
       </section>
 
       <section className="rounded-lg border border-amber-100/25 bg-amber-950/40 p-4">
-        <p className="text-lg font-semibold text-amber-100">Total: {totalScore}</p>
+        <p className="text-lg font-semibold text-amber-100">
+          Total: {totalScore}
+        </p>
         {gameOver && (
           <div className="mt-1 text-sm text-amber-100/75">
             <p>ゲーム終了</p>
